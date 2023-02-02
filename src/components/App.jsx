@@ -18,6 +18,7 @@ class App extends Component {
   state = {
     searchImages: '',
     images: [],
+    total: null,
     page: 1,
     error: null,
     status: IDLE,
@@ -48,6 +49,7 @@ class App extends Component {
             return this.setState(prevState => {
               return {
                 images: [...prevState.images, ...data.hits],
+                total: data.totalHits,
                 status: RESOLVED,
               };
             });
@@ -78,7 +80,13 @@ class App extends Component {
       return;
     }
     if (status === PENDING) {
-      return <Loader />;
+      const { images } = this.state;
+      return (
+        <>
+          <Loader />
+          <ImageGallery images={images} />
+        </>
+      );
     }
     if (status === REJECTED) {
       toast.error(error.message, { position: 'top-center' });
@@ -86,11 +94,12 @@ class App extends Component {
       return;
     }
     if (status === RESOLVED) {
-      const { images } = this.state;
+      const { images, total, page } = this.state;
+      const totalPage = images.length / (page * total);
       return (
         <>
           <ImageGallery images={images} />
-          <Button onClick={() => loadImages()} />
+          {totalPage < 1 && <Button onClick={loadImages} />}
         </>
       );
     }
@@ -102,7 +111,6 @@ class App extends Component {
       <div className={styles.App}>
         {<Searchbar onSubmit={handleFormSubmit} />}
         {renderContent()}
-
         <ToastContainer />
       </div>
     );
